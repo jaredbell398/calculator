@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>Calculator</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .calculator {
+        background-color: #333;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        width: 300px;
+      }
+
+      #display {
+            background-color: #444; /* Slightly lighter dark for display */
+            color: #eee; /* Light text color */
+            font-size: 2.5em; /* Larger font for readability */
+            text-align: right;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            min-height: 40px; /* Ensure display has a minimum height */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+            overflow: hidden; /* Hide overflow if numbers get too long */
+            white-space: nowrap; /* Keep numbers on one line */
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 columns, equal width */
+            gap: 10px; /* Space between buttons */
+        }
+
+        .buttons-grid button {
+            background-color: #666; /* Default button color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+      }
+  
+      .button-container { /* Added a container div */
+        display: flex; /* Make the container a flex container */
+      }
+  
+      button {
+        margin: 1px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Calculator</h1>
+
+    <div class="calculator">
+        <div id="display">0</div> <div class="buttons-grid">
+            <button class="clear" onclick="clearExpression()">C</button>
+            <button class="operator">+/-</button>
+            <button class="operator">%</button>
+            <button class="operator" onclick="addToExpression('/')">/</button>
+
+            <button onclick="addToExpression('7')">7</button>
+            <button onclick="addToExpression('8')">8</button>
+            <button onclick="addToExpression('9')">9</button>
+            <button class="operator" onclick="addToExpression('*')">x</button>
+
+            <button onclick="addToExpression('4')">4</button>
+            <button onclick="addToExpression('5')">5</button>
+            <button onclick="addToExpression('6')">6</button>
+            <button class="operator" onclick="addToExpression('-')">-</button>
+
+            <button onclick="addToExpression('1')">1</button>
+            <button onclick="addToExpression('2')">2</button>
+            <button onclick="addToExpression('3')">3</button>
+            <button class="operator" onclick="addToExpression('+')">+</button>
+
+            <button style="grid-column: span 2;" onclick="addToExpression('0')">0</button> <button onclick="addToExpression('.')">.</button>
+            <button class="equals" onclick="addToExpression('=')">=</button>
+        </div>
+    </div>
+
+    <script>
+        const calculatorDisplay = document.getElementById('display'); // Calculator display
+        let expression = ''; // Keeps track of the current expression, evaluates the expression when '=' is pressed
+        let clearFlag = false; // Keeps track of if the display should be cleared
+
+        // Calculator operations
+        const add = (a, b) => a + b;
+        const subtract = (a, b) => a - b;
+        const multiply = (a, b) => a * b;
+        const divide = (a, b) => a / b;
+
+        // TODO: Add support for operations between floating point numbers
+        // Performs an operations based on the operands and operator
+        function operate(operandA, operandB, operator) {
+            switch(operator) {
+                case "+":
+                    return add(operandA, operandB);
+                case "-":
+                    return subtract(operandA, operandB);
+                case "*":
+                    return multiply(operandA, operandB);
+                case "/":
+                    if(operandB == 0) {
+                      expression = '';
+                      return "Undefined";
+                    }
+                    return divide(operandA, operandB);
+            }
+        }
+
+        // Interprets the expression String to decide what operation should be performed
+        function evaluateExpression(expression) {
+            // Checks to make sure that a call to evaluate the expression was actually made
+            if(!expression.endsWith("=")) {
+                return "Error: Cannot evaluate expression.";
+            }
+            // Gets rid of the '=' sign
+            else {
+                expression = expression.slice(0, -1);
+            }
+
+            // Splits the expression String into an array of operandA, the operator and operandB
+            const parts = expression.split(/([+\-*/])/);
+            partsArr = parts.map(part => {
+                       const num = parseFloat(part);
+                       return isNaN(num) ? part : num;
+                       }).filter(part => part !== "");
+            
+            let result = operate(partsArr[0], partsArr[2], partsArr[1]); // Gets the result of the expression
+
+            // Displays message, raises clear flag so on the next input the expression is cleared
+            console.log(result);
+            displayMessage(result);
+            clearFlag = true;
+        }
+
+        // Clear expression function
+        function clearExpression() {
+          expression = '';
+          displayMessage(expression);
+          clearFlag = false;
+        }
+
+        function addToExpression(n) {
+            // If the clear flag is raised, reset the expression
+            if(clearFlag) {
+              clearExpression();
+            }
+
+            // If the expression is currently just an operator
+            if((n == '+' || n == '-' || n == '*' || n == '/') && expression.length == 0) {
+              expression = '';
+              clearExpression();
+            }
+            // If the expression is currently just 0, make it n 
+            else if(expression == '0') {
+              expression = n;
+            }
+            // Otherwise, append n to the expression
+            else {
+              expression = expression + n;
+            }
+
+            // Display the current expression
+            console.log(expression);
+            displayMessage(expression);
+
+            // If the '=' sign is pressed perform an evaluation
+            if(n == "=") {
+              evaluateExpression(expression);
+            }
+        }
+
+        function displayMessage(message) {
+          calculatorDisplay.innerHTML = "<p>" + message + "</p>"; 
+        }
+    </script>
+  </body>
+</html>
